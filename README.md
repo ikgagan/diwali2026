@@ -83,13 +83,14 @@ Use the **personal** Google account that owns the party folder (`diwaligagan@gma
    ```powershell
    cd backend
    .venv\Scripts\activate
-   python scripts/get_refresh_token.py --folder-id 1wV-77g0hQcs3SFf-OZYM1sZd---WQ3LS
+   python scripts/get_refresh_token.py --folder-id 1wV-77g0hQcs3SFf-OZYM1sZd---WQ3LS --write-env
    ```
 
    A browser opens. Sign in with the personal Gmail. You will see "Google hasn't verified this app":
-   click **Continue** (it is your own app). Allow Drive access.
-   The script creates `medium/` and `thumbs/` inside the folder and prints the five `GOOGLE_*` / `DRIVE_*`
-   lines. Paste them into `backend/.env` and, later, into Render.
+   click **Advanced > Go to Diwali Photos** (it is your own app). Allow Drive access.
+   The script creates `medium/` and `thumbs/` inside the folder and, with `--write-env`, writes the five
+   `GOOGLE_*` / `DRIVE_*` lines straight into `backend/.env`. Without the flag it prints them for you to paste.
+   Later, copy the same five lines from `backend/.env` into Render.
 
 **Why the full `drive` scope?** The least-privilege `drive.file` scope can only write into folders the
 app itself created. Because you want to keep your existing folder, the script requests full Drive

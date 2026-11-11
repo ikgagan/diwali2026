@@ -43,12 +43,31 @@ def ensure_subfolder(service, parent_id: str, name: str) -> str:
     return created["id"]
 
 
+def write_env(env_path: Path, values: dict[str, str]) -> None:
+    """Update KEY=value lines in a .env file in place (keeps comments and other keys), appending any missing keys."""
+    lines = env_path.read_text(encoding="utf-8-sig").splitlines() if env_path.exists() else []
+    remaining = dict(values)
+    out: list[str] = []
+    for line in lines:
+        stripped = line.strip()
+        key = stripped.split("=", 1)[0].strip() if "=" in stripped and not stripped.startswith("#") else None
+        if key in remaining:
+            out.append(f"{key}={remaining.pop(key)}")
+        else:
+            out.append(line)
+    for key, value in remaining.items():
+        out.append(f"{key}={value}")
+    env_path.write_text("\n".join(out) + "\n", encoding="utf-8")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--client-secret", default=str(BACKEND_DIR / "client_secret.json"))
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--folder-id", help="Existing Drive folder ID (uses the full 'drive' scope)")
     group.add_argument("--create-folder", metavar="NAME", help="Create a new folder (uses 'drive.file' scope)")
+    parser.add_argument("--write-env", action="store_true",
+                        help="Write the values straight into backend/.env instead of printing the secrets")
     args = parser.parse_args()
 
     secret_path = Path(args.client_secret)
@@ -96,12 +115,23 @@ def main() -> int:
     print("\nDrive folder:", folder.get("name"), f"({folder_id})")
     print("  medium/ ->", medium_id)
     print("  thumbs/ ->", thumbs_id)
-    print("\nPaste these into backend/.env and into Render > Environment (keep them secret):\n")
-    print(f"GOOGLE_CLIENT_ID={creds.client_id}")
-    print(f"GOOGLE_CLIENT_SECRET={creds.client_secret}")
-    print(f"GOOGLE_REFRESH_TOKEN={creds.refresh_token}")
-    print(f"DRIVE_FOLDER_ID={folder_id}")
-    print(f"DRIVE_FOLDER_LINK={link}")
+    values = {
+        "GOOGLE_CLIENT_ID": creds.client_id,
+        "GOOGLE_CLIENT_SECRET": creds.client_secret,
+        "GOOGLE_REFRESH_TOKEN": creds.refresh_token,
+        "DRIVE_FOLDER_ID": folder_id,
+        "DRIVE_FOLDER_LINK": link,
+    }
+    if args.write_env:
+        env_path = BACKEND_DIR / ".env"
+        write_env(env_path, values)
+        print(f"\nWritten to {env_path} (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN, "
+              "DRIVE_FOLDER_ID, DRIVE_FOLDER_LINK).")
+        print("Restart the backend to pick them up. For Render, copy the same five lines from that file.")
+    else:
+        print("\nPaste these into backend/.env and into Render > Environment (keep them secret):\n")
+        for key, value in values.items():
+            print(f"{key}={value}")
     print("\nReminder: while the OAuth consent screen is in 'Testing', this token expires in 7 days.")
     return 0
 
