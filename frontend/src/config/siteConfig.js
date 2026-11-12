@@ -30,7 +30,7 @@ export const siteConfig = {
       },
       {
         icon: "shirt",
-        text: "The dress code is strictly Indian traditional. Kurtas for the gents, sarees or lehengas for the ladies. Bring out your festive best!",
+        text: "The dress code is strictly Indian traditional. Kurtas for the boys, sarees or lehengas for the girls. Bring out your festive best!",
         strong: "strictly Indian traditional",
       },
       {
@@ -96,6 +96,13 @@ export const siteConfig = {
   },
 
   thankYou: {
+    // The page stays locked (countdown only) until this moment. ISO string with the IST offset.
+    unlockAt: "2026-11-14T20:00:00+05:30",
+    unlockAtText: "14th November 2026, 8 PM IST",
+    lockedHeading: "Not yet...",
+    lockedText:
+      "This page is for after the party. Come back once the diyas have burned down and the last song has played.",
+    lockedUnlockLine: "It opens on {when}.",
     heading: "It wouldn't have been the same without you.",
     paragraphs: [
       "Thank you for making this Diwali so special. Your laughter, your outfits, your energy, and your presence made the night unforgettable. Thank you for making this happen!",

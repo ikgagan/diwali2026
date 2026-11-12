@@ -1,17 +1,30 @@
 import { motion } from "motion/react";
 import { Heart, Upload } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+import CountdownLock, { useNow } from "../components/CountdownLock.jsx";
 import Diya from "../components/Diya.jsx";
 import DriveLinkCard from "../components/DriveLinkCard.jsx";
 import Fireworks from "../components/Fireworks.jsx";
 import Rangoli from "../components/Rangoli.jsx";
 import Reveal from "../components/Reveal.jsx";
 import { siteConfig } from "../config/siteConfig.js";
-import { getConfig } from "../lib/api.js";
+import { ADMIN_KEY, getConfig, storage } from "../lib/api.js";
+
+const UNLOCK_AT = Date.parse(siteConfig.thankYou.unlockAt);
 
 export default function ThankYou() {
   const { thankYou } = siteConfig;
+  const [params] = useSearchParams();
+  const now = useNow();
+  // Locked until the party is over. The host can peek with ?preview=1 or from a device logged in to /admin.
+  const unlocked = now >= UNLOCK_AT || params.has("preview") || Boolean(storage.get(ADMIN_KEY));
+
+  if (!unlocked) return <CountdownLock unlockAt={UNLOCK_AT} now={now} />;
+  return <ThankYouContent thankYou={thankYou} />;
+}
+
+function ThankYouContent({ thankYou }) {
   const [driveLink, setDriveLink] = useState(null);
 
   useEffect(() => {
